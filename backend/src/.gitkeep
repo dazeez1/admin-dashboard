@@ -1,0 +1,2 @@
+# This file ensures that the src/ directory is tracked by Git
+# even when it's empty. It will be removed once actual source files are added.

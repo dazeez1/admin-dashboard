@@ -1,0 +1,2 @@
+# This file ensures that the models/ directory is tracked by Git
+# even when it's empty. It will be removed once actual model files are added.

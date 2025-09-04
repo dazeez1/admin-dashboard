@@ -1,0 +1,2 @@
+# This file ensures that the routes/ directory is tracked by Git
+# even when it's empty. It will be removed once actual route files are added.

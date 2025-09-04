@@ -1,0 +1,33 @@
+{
+  "name": "admin-dashboard",
+  "version": "1.0.0",
+  "description": "Admin panel API with role-based access control (RBAC) - Full-stack application",
+  "main": "index.js",
+  "scripts": {
+    "dev": "npm run dev --workspace=backend",
+    "start": "npm run start --workspace=backend",
+    "test": "npm run test --workspaces",
+    "install:all": "npm install && npm install --workspace=backend",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces",
+    "lint:fix": "npm run lint:fix --workspaces"
+  },
+  "keywords": [
+    "admin-dashboard",
+    "rbac",
+    "admin-panel",
+    "api",
+    "nodejs",
+    "express",
+    "fullstack"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "workspaces": [
+    "backend"
+  ],
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+}
