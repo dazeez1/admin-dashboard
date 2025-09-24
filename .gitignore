@@ -57,53 +57,22 @@ jspm_packages/
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
-.parcel-cache
 
-# Next.js build output
-.next
-
-# Nuxt.js build / generate output
-.nuxt
-dist
 
 # Gatsby files
 .cache/
 public
 
-# Storybook build outputs
-.out
-.storybook-out
-
-# Temporary folders
-tmp/
 temp/
 
 # Editor directories and files
 .vscode/
-.idea/
-*.swp
-*.swo
-*~
 
 # OS generated files
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
+
 
 # Build outputs
 build/
 dist/
-out/
 
-# Database files
-*.db
-*.sqlite
-*.sqlite3
-
-# Backup files
-*.bak
-*.backup
