@@ -1,39 +1,34 @@
-# Admin Dashboard
+# Admin Dashboard Backend API
 
-A comprehensive admin panel API with role-based access control (RBAC) built with Node.js and modern web technologies.
+A secure Node.js backend API with JWT authentication and refresh token system, built with Express.js and MongoDB.
 
 ## Description
 
-The Admin Dashboard is a robust backend API system designed to provide secure, scalable administrative functionality for web applications. It features a sophisticated role-based access control system that allows administrators to manage users, permissions, and system resources with granular control.
+This backend service provides a robust authentication system with role-based access control (RBAC). It features JWT access tokens, refresh token rotation, password hashing with bcrypt, and comprehensive security middleware.
 
 ## Features
 
-- **Role-Based Access Control (RBAC)**: Comprehensive permission management system
-- **User Management**: Secure user authentication and authorization
-- **API Security**: JWT-based authentication with refresh token support
-- **Database Integration**: Flexible database support with ORM
-- **API Documentation**: Comprehensive API documentation with examples
-- **Testing Suite**: Full test coverage for all endpoints
-- **Logging & Monitoring**: Advanced logging and system monitoring
-- **Rate Limiting**: Built-in rate limiting and security measures
+- **JWT Authentication**: Access tokens (15min) + Refresh tokens (7days)
+- **Role-Based Access Control (RBAC)**: Admin, Manager, User roles with granular permissions
+- **Password Security**: Bcrypt hashing with configurable rounds
+- **Refresh Token Rotation**: Secure token renewal system
+- **Activity Logging**: Comprehensive audit trail for all user actions
+- **Statistics Dashboard**: Real-time stats with MongoDB aggregation
+- **User Management**: Complete CRUD operations with role-based access
+- **Account Security**: Login attempt tracking and account locking
+- **MongoDB Integration**: Mongoose ODM for data persistence
+- **Input Validation**: Express-validator for request validation
+- **Rate Limiting**: Protection against brute force attacks
+- **Security Headers**: Helmet.js for security headers
 - **CORS Support**: Configurable cross-origin resource sharing
-- **Environment Configuration**: Multi-environment configuration support
+- **Comprehensive Testing**: Jest test suite for all endpoints
 
-## Installation & Usage
+## Installation
 
-### Prerequisites
-
-- Node.js (v16 or higher)
-- npm or yarn package manager
-- Database (MongoDB Atlas)
-
-### Installation
-
-1. Clone the repository:
+1. Navigate to the backend directory:
 
    ```bash
-   git clone https://github.com/yourusername/admin-dashboard.git
-   cd admin-dashboard
+   cd backend
    ```
 
 2. Install dependencies:
@@ -49,78 +44,342 @@ The Admin Dashboard is a robust backend API system designed to provide secure, s
    # Edit .env with your configuration
    ```
 
-4. Initialize the database:
-
-   ```bash
-   npm run db:migrate
-   npm run db:seed
-   ```
+4. Start MongoDB (make sure MongoDB is running locally or update MONGO_URI)
 
 5. Start the development server:
    ```bash
-   node server.js
+   npm run dev
    ```
 
-### Usage
+## Environment Variables
 
-The API will be available at `http://localhost:3000` (or your configured port).
+```env
+# Server Configuration
+PORT=3000
+NODE_ENV=development
 
-#### Authentication
+# Database
+MONGO_URI=mongodb://localhost:27017/admin-dashboard-rbac
 
-```bash
-# Login to get access token
-POST /api/auth/login
+# JWT Configuration
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+JWT_ACCESS_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_IN=7d
+
+# Security
+BCRYPT_ROUNDS=12
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+
+# CORS
+CORS_ORIGIN=http://localhost:3000
+```
+
+## API Endpoints
+
+### Authentication Endpoints
+
+#### POST /api/auth/signup
+
+Register a new user with default role 'user'.
+
+**Request Body:**
+
+```json
 {
-  "email": "admin@example.com",
-  "password": "password123"
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "SecurePass123"
 }
 ```
 
-#### API Endpoints
+**Response:**
 
-- `POST /api/auth/login` - User authentication
-- `GET /api/users` - List users (admin only)
-- `POST /api/users` - Create new user (admin only)
-- `PUT /api/users/:id` - Update user (admin or self)
-- `DELETE /api/users/:id` - Delete user (admin only)
+```json
+{
+  "success": true,
+  "message": "User registered successfully",
+  "data": {
+    "user": {
+      "id": "user_id",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "role": "user",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    },
+    "accessToken": "jwt_access_token",
+    "refreshToken": "jwt_refresh_token"
+  }
+}
+```
 
-## Technologies Used
+#### POST /api/auth/login
 
-- **Backend**: Node.js, Express.js
-- **Database**: MongoDB Atlas
-- **Authentication**: JWT, bcrypt
-- **Validation**: Joi, express-validator
-- **Testing**: Jest, Supertest
-- **Documentation**: Swagger/OpenAPI
-- **Security**: Helmet, CORS, rate-limiting
-- **Development**: Nodemon, ESLint, Prettier
+Authenticate user and receive tokens.
 
-## Project Structure
+**Request Body:**
+
+```json
+{
+  "email": "john@example.com",
+  "password": "SecurePass123"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "user": {
+      "id": "user_id",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "role": "user",
+      "lastLogin": "2024-01-01T00:00:00.000Z"
+    },
+    "accessToken": "jwt_access_token",
+    "refreshToken": "jwt_refresh_token"
+  }
+}
+```
+
+#### POST /api/auth/refresh
+
+Refresh access token using refresh token.
+
+**Request Body:**
+
+```json
+{
+  "refreshToken": "jwt_refresh_token"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Tokens refreshed successfully",
+  "data": {
+    "accessToken": "new_jwt_access_token",
+    "refreshToken": "new_jwt_refresh_token"
+  }
+}
+```
+
+#### POST /api/auth/logout
+
+Invalidate refresh token.
+
+**Request Body:**
+
+```json
+{
+  "refreshToken": "jwt_refresh_token"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Logout successful"
+}
+```
+
+#### GET /api/auth/profile
+
+Get current user profile (requires Bearer token).
+
+**Headers:**
 
 ```
-admin-dashboard/
-├── backend/
-│   ├── src/
-│   │   ├── controllers/     # Route controllers
-│   │   ├── middleware/      # Custom middleware
-│   │   ├── models/          # Database models
-│   │   ├── routes/          # API routes
-│   │   ├── services/        # Business logic
-│   │   ├── utils/           # Utility functions
-│   │   └── app.js          # Express app configuration
-│   ├── tests/               # Test files
-│   ├── package.json         # Backend dependencies
-│   └── README.md           # Backend documentation
-├── .gitignore              # Git ignore rules
-└── README.md               # Project overview
+Authorization: Bearer jwt_access_token
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": "user_id",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "role": "user",
+      "isActive": true,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    }
+  }
+}
+```
+
+### Health Check
+
+#### GET /health
+
+Check server status.
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Server is running",
+  "timestamp": "2024-01-01T00:00:00.000Z",
+  "environment": "development"
+}
+```
+
+## Development
+
+### Available Scripts
+
+- `npm run dev` - Start development server with nodemon
+- `npm start` - Start production server
+- `npm test` - Run test suite
+- `npm run test:watch` - Run tests in watch mode
+- `npm run test:coverage` - Run tests with coverage
+
+### Project Structure
+
+```
+backend/
+├── server.js                 # Main server file
+├── package.json              # Dependencies and scripts
+├── .env.example             # Environment variables template
+├── src/
+│   ├── config/
+│   │   └── database.js      # MongoDB connection
+│   ├── controllers/
+│   │   └── authController.js # Authentication logic
+│   ├── middleware/
+│   │   ├── auth.js          # JWT authentication middleware
+│   │   └── validation.js    # Request validation middleware
+│   ├── models/
+│   │   └── User.js          # User Mongoose model
+│   ├── routes/
+│   │   └── auth.js          # Authentication routes
+│   └── utils/
+│       └── jwt.js           # JWT utility functions
+└── tests/
+    └── auth.test.js         # Authentication tests
+```
+
+## Testing
+
+Run the comprehensive test suite:
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage
+npm run test:coverage
+```
+
+## Security Features
+
+- **JWT Access Tokens**: Short-lived (15 minutes) for API access
+- **Refresh Tokens**: Long-lived (7 days) stored in database
+- **Password Hashing**: Bcrypt with configurable salt rounds
+- **Token Rotation**: New refresh token issued on each refresh
+- **Rate Limiting**: 100 requests per 15 minutes per IP
+- **Input Validation**: Comprehensive request validation
+- **CORS Protection**: Configurable cross-origin policies
+- **Security Headers**: Helmet.js for security headers
+- **Token Invalidation**: Refresh tokens removed on logout
+
+## Role-Based Access Control (RBAC)
+
+### Roles and Permissions
+
+**Admin Role:**
+
+- Full access to all resources
+- Can manage users (create, read, update, delete)
+- Can view all statistics
+- Can view, delete, and export all activity logs
+- Can change user roles and reset passwords
+
+**Manager Role:**
+
+- Limited administrative access
+- Can view and update users (but not delete)
+- Can view statistics
+- Can view and export activity logs (but not delete)
+- Cannot change user roles or reset passwords
+
+**User Role:**
+
+- Basic access only
+- Can view and update their own profile
+- Cannot access user management, statistics, or activity logs
+- Cannot perform administrative actions
+
+### Permission Matrix
+
+| Resource | Action | Admin | Manager | User     |
+| -------- | ------ | ----- | ------- | -------- |
+| Users    | Create | ✅    | ❌      | ❌       |
+| Users    | Read   | ✅    | ✅      | Own only |
+| Users    | Update | ✅    | ✅      | Own only |
+| Users    | Delete | ✅    | ❌      | ❌       |
+| Stats    | Read   | ✅    | ✅      | ❌       |
+| Logs     | Read   | ✅    | ✅      | ❌       |
+| Logs     | Delete | ✅    | ❌      | ❌       |
+| Logs     | Export | ✅    | ✅      | ❌       |
+| Profile  | Read   | ✅    | ✅      | Own only |
+| Profile  | Update | ✅    | ✅      | Own only |
+
+## Database Schema
+
+### User Model
+
+```javascript
+{
+  name: String (required, 2-50 chars),
+  email: String (required, unique, valid email),
+  password: String (required, min 6 chars, hashed),
+  role: String (enum: ['user', 'admin', 'moderator'], default: 'user'),
+  refreshTokens: [{
+    token: String,
+    createdAt: Date (expires in 7 days)
+  }],
+  isActive: Boolean (default: true),
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+## Error Handling
+
+All endpoints return consistent error responses:
+
+```json
+{
+  "success": false,
+  "message": "Error description",
+  "errors": [
+    {
+      "field": "fieldName",
+      "message": "Validation error message",
+      "value": "invalidValue"
+    }
+  ]
+}
 ```
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Author
-
-**Azeez Damilare Gbenga** - [GitHub Profile](https://github.com/dazeez1)
-
----
+This project is licensed under the MIT License.

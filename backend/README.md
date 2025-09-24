@@ -9,8 +9,13 @@ This backend service provides a robust authentication system with role-based acc
 ## Features
 
 - **JWT Authentication**: Access tokens (15min) + Refresh tokens (7days)
+- **Role-Based Access Control (RBAC)**: Admin, Manager, User roles with granular permissions
 - **Password Security**: Bcrypt hashing with configurable rounds
 - **Refresh Token Rotation**: Secure token renewal system
+- **Activity Logging**: Comprehensive audit trail for all user actions
+- **Statistics Dashboard**: Real-time stats with MongoDB aggregation
+- **User Management**: Complete CRUD operations with role-based access
+- **Account Security**: Login attempt tracking and account locking
 - **MongoDB Integration**: Mongoose ODM for data persistence
 - **Input Validation**: Express-validator for request validation
 - **Rate Limiting**: Protection against brute force attacks
@@ -294,6 +299,48 @@ npm run test:coverage
 - **CORS Protection**: Configurable cross-origin policies
 - **Security Headers**: Helmet.js for security headers
 - **Token Invalidation**: Refresh tokens removed on logout
+
+## Role-Based Access Control (RBAC)
+
+### Roles and Permissions
+
+**Admin Role:**
+
+- Full access to all resources
+- Can manage users (create, read, update, delete)
+- Can view all statistics
+- Can view, delete, and export all activity logs
+- Can change user roles and reset passwords
+
+**Manager Role:**
+
+- Limited administrative access
+- Can view and update users (but not delete)
+- Can view statistics
+- Can view and export activity logs (but not delete)
+- Cannot change user roles or reset passwords
+
+**User Role:**
+
+- Basic access only
+- Can view and update their own profile
+- Cannot access user management, statistics, or activity logs
+- Cannot perform administrative actions
+
+### Permission Matrix
+
+| Resource | Action | Admin | Manager | User     |
+| -------- | ------ | ----- | ------- | -------- |
+| Users    | Create | ✅    | ❌      | ❌       |
+| Users    | Read   | ✅    | ✅      | Own only |
+| Users    | Update | ✅    | ✅      | Own only |
+| Users    | Delete | ✅    | ❌      | ❌       |
+| Stats    | Read   | ✅    | ✅      | ❌       |
+| Logs     | Read   | ✅    | ✅      | ❌       |
+| Logs     | Delete | ✅    | ❌      | ❌       |
+| Logs     | Export | ✅    | ✅      | ❌       |
+| Profile  | Read   | ✅    | ✅      | Own only |
+| Profile  | Update | ✅    | ✅      | Own only |
 
 ## Database Schema
 

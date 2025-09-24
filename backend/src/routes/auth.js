@@ -12,7 +12,7 @@ const {
   validateLogin,
   validateRefreshToken,
 } = require("../middleware/validation");
-const { authenticateToken } = require("../middleware/auth");
+const { authenticateToken, logActivity } = require("../middleware/rbac");
 
 // Public routes
 router.post("/signup", validateSignup, signup);

@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const ActivityLog = require("../models/ActivityLog");
 const {
   generateAccessToken,
   generateRefreshToken,
@@ -39,6 +40,21 @@ const signup = async (req, res) => {
     // Store refresh token in database
     await user.addRefreshToken(refreshToken);
 
+    // Log signup activity
+    await ActivityLog.createLog({
+      userId: user._id,
+      action: "signup",
+      resource: "auth",
+      details: {
+        email: user.email,
+        role: user.role,
+      },
+      ipAddress: req.ip || req.connection.remoteAddress,
+      userAgent: req.get("User-Agent"),
+      status: "success",
+      severity: "low",
+    });
+
     // Remove sensitive data from response
     const userResponse = {
       id: user._id,
@@ -69,18 +85,70 @@ const signup = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    const ipAddress = req.ip || req.connection.remoteAddress;
 
     // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
+      // Log failed login attempt
+      await ActivityLog.createLog({
+        userId: null,
+        action: "failed_login",
+        resource: "auth",
+        details: {
+          email: email,
+          reason: "User not found",
+        },
+        ipAddress: ipAddress,
+        userAgent: req.get("User-Agent"),
+        status: "failed",
+        severity: "medium",
+      });
+
       return res.status(401).json({
         success: false,
         message: "Invalid email or password",
       });
     }
 
+    // Check if account is locked
+    if (user.isAccountLocked()) {
+      await ActivityLog.createLog({
+        userId: user._id,
+        action: "account_locked",
+        resource: "auth",
+        details: {
+          email: user.email,
+          attempts: user.loginAttempts.count,
+        },
+        ipAddress: ipAddress,
+        userAgent: req.get("User-Agent"),
+        status: "failed",
+        severity: "high",
+      });
+
+      return res.status(423).json({
+        success: false,
+        message: "Account temporarily locked due to too many failed attempts",
+      });
+    }
+
     // Check if user is active
     if (!user.isActive) {
+      await ActivityLog.createLog({
+        userId: user._id,
+        action: "failed_login",
+        resource: "auth",
+        details: {
+          email: user.email,
+          reason: "Account deactivated",
+        },
+        ipAddress: ipAddress,
+        userAgent: req.get("User-Agent"),
+        status: "failed",
+        severity: "medium",
+      });
+
       return res.status(401).json({
         success: false,
         message: "Account is deactivated",
@@ -90,6 +158,24 @@ const login = async (req, res) => {
     // Verify password
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
+      // Increment failed login attempts
+      await user.incrementLoginAttempts();
+
+      await ActivityLog.createLog({
+        userId: user._id,
+        action: "failed_login",
+        resource: "auth",
+        details: {
+          email: user.email,
+          reason: "Invalid password",
+          attempts: user.loginAttempts.count,
+        },
+        ipAddress: ipAddress,
+        userAgent: req.get("User-Agent"),
+        status: "failed",
+        severity: "medium",
+      });
+
       return res.status(401).json({
         success: false,
         message: "Invalid email or password",
@@ -109,6 +195,24 @@ const login = async (req, res) => {
 
     // Store refresh token in database
     await user.addRefreshToken(refreshToken);
+
+    // Update login info
+    await user.updateLoginInfo(ipAddress);
+
+    // Log successful login
+    await ActivityLog.createLog({
+      userId: user._id,
+      action: "login",
+      resource: "auth",
+      details: {
+        email: user.email,
+        role: user.role,
+      },
+      ipAddress: ipAddress,
+      userAgent: req.get("User-Agent"),
+      status: "success",
+      severity: "low",
+    });
 
     // Remove sensitive data from response
     const userResponse = {
