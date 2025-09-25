@@ -1,6 +1,6 @@
-# Admin Dashboard Backend API
+# Admin Dashboard RBAC API
 
-A secure Node.js backend API with JWT authentication and refresh token system, built with Express.js and MongoDB.
+A secure Node.js backend API with JWT authentication, refresh token system, and Role-Based Access Control (RBAC), built with Express.js and MongoDB.
 
 ## Description
 
@@ -23,7 +23,21 @@ This backend service provides a robust authentication system with role-based acc
 - **CORS Support**: Configurable cross-origin resource sharing
 - **Comprehensive Testing**: Jest test suite for all endpoints
 
-## Installation
+## **Quick Start**
+
+### **1. Test the Live API**
+
+```bash
+# Health Check
+curl https://admin-dashboard-ea64.onrender.com/health
+
+# Register User
+curl -X POST https://admin-dashboard-ea64.onrender.com/api/auth/signup \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test User","email":"test@example.com","password":"TestPass123!"}'
+```
+
+## **Local Development Setup**
 
 1. Navigate to the backend directory:
 
@@ -40,7 +54,7 @@ This backend service provides a robust authentication system with role-based acc
 3. Set up environment variables:
 
    ```bash
-   cp .env.example .env
+   cp env.production.example .env
    # Edit .env with your configuration
    ```
 
@@ -75,9 +89,9 @@ RATE_LIMIT_MAX_REQUESTS=100
 CORS_ORIGIN=http://localhost:3000
 ```
 
-## API Endpoints
+## **API Endpoints**
 
-### Authentication Endpoints
+### **Authentication Endpoints**
 
 #### POST /api/auth/signup
 
@@ -221,7 +235,206 @@ Authorization: Bearer jwt_access_token
 }
 ```
 
-### Health Check
+### **Admin Endpoints (Protected)**
+
+#### GET /api/admin/users
+
+Get all users (Admin only)
+
+**Headers:**
+
+```
+Authorization: Bearer jwt_access_token
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "users": [
+      {
+        "id": "user_id",
+        "name": "John Doe",
+        "email": "john@example.com",
+        "role": "user",
+        "isActive": true,
+        "createdAt": "2024-01-01T00:00:00.000Z"
+      }
+    ],
+    "total": 1
+  }
+}
+```
+
+#### PATCH /api/admin/users/:id/role
+
+Update user role (Admin only)
+
+**Headers:**
+
+```
+Authorization: Bearer jwt_access_token
+Content-Type: application/json
+```
+
+**Request Body:**
+
+```json
+{
+  "role": "admin"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "User role updated successfully",
+  "data": {
+    "user": {
+      "id": "user_id",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "role": "admin",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    }
+  }
+}
+```
+
+### **Statistics Endpoints (Admin/Manager)**
+
+#### GET /api/admin/stats/users
+
+Get user statistics by role
+
+**Headers:**
+
+```
+Authorization: Bearer jwt_access_token
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "totalUsers": 10,
+    "usersByRole": {
+      "admin": 2,
+      "manager": 3,
+      "user": 5
+    },
+    "activeUsers": 8,
+    "inactiveUsers": 2
+  }
+}
+```
+
+#### GET /api/admin/stats/logins
+
+Get login statistics
+
+**Headers:**
+
+```
+Authorization: Bearer jwt_access_token
+```
+
+**Query Parameters:**
+
+- `days` (optional): Number of days to analyze (default: 7)
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "period": "7 days",
+    "totalLogins": 45,
+    "successfulLogins": 42,
+    "failedLogins": 3,
+    "successRate": 93.33,
+    "dailyBreakdown": [
+      {
+        "date": "2024-01-01",
+        "successful": 6,
+        "failed": 0
+      }
+    ]
+  }
+}
+```
+
+### **Activity Logs Endpoints (Admin/Manager)**
+
+#### GET /api/admin/logs
+
+Get activity logs
+
+**Headers:**
+
+```
+Authorization: Bearer jwt_access_token
+```
+
+**Query Parameters:**
+
+- `action` (optional): Filter by action type
+- `userId` (optional): Filter by user ID
+- `limit` (optional): Number of logs to return (default: 50)
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "logs": [
+      {
+        "id": "log_id",
+        "userId": "user_id",
+        "userName": "John Doe",
+        "action": "login",
+        "resource": "auth",
+        "ipAddress": "192.168.1.1",
+        "userAgent": "Mozilla/5.0...",
+        "timestamp": "2024-01-01T00:00:00.000Z"
+      }
+    ],
+    "total": 1,
+    "pagination": {
+      "page": 1,
+      "limit": 50,
+      "totalPages": 1
+    }
+  }
+}
+```
+
+#### GET /api/admin/logs/export
+
+Export activity logs (Admin only)
+
+**Headers:**
+
+```
+Authorization: Bearer jwt_access_token
+```
+
+**Query Parameters:**
+
+- `format`: Export format (`json` or `csv`)
+- `limit` (optional): Number of logs to export (default: 1000)
+
+**Response:** File download or JSON array
+
+### **Health Check**
 
 #### GET /health
 
@@ -238,7 +451,63 @@ Check server status.
 }
 ```
 
-## Development
+## **Testing & API Documentation**
+
+### **Postman Collection**
+
+We provide a comprehensive Postman collection for testing all endpoints:
+
+- **`Admin-Dashboard-Live-Demo.postman_collection.json`** - Live demo collection with pre-configured URLs
+- **`Admin-Dashboard-RBAC-Simple.postman_collection.json`** - Simple collection for manual testing
+
+**Features:**
+
+- 25+ test cases covering all endpoints
+- Pre-configured with live production URLs
+- Organized into logical phases (Setup, Authentication, RBAC Testing, etc.)
+- Detailed descriptions and step-by-step instructions
+- Token management examples
+
+### **Manual Testing**
+
+Test the live API with curl commands:
+
+```bash
+# 1. Health Check
+curl https://admin-dashboard-ea64.onrender.com/health
+
+# 2. Register User
+curl -X POST https://admin-dashboard-ea64.onrender.com/api/auth/signup \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test User","email":"test@example.com","password":"TestPass123!"}'
+
+# 3. Login (use token from signup response)
+curl -X POST https://admin-dashboard-ea64.onrender.com/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"TestPass123!"}'
+
+# 4. Get Profile (use accessToken from login response)
+curl -X GET https://admin-dashboard-ea64.onrender.com/api/auth/profile \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+### **RBAC Testing**
+
+Test role-based access control:
+
+```bash
+# Regular user trying to access admin endpoint (should fail)
+curl -X GET https://admin-dashboard-ea64.onrender.com/api/admin/users \
+  -H "Authorization: Bearer USER_TOKEN"
+# Expected: 403 Forbidden
+
+# Admin accessing admin endpoint (should work)
+curl -X GET https://admin-dashboard-ea64.onrender.com/api/admin/users \
+  -H "Authorization: Bearer ADMIN_TOKEN"
+# Expected: 200 OK with user list
+```
+
+## **Development**
 
 ### Available Scripts
 
@@ -247,31 +516,6 @@ Check server status.
 - `npm test` - Run test suite
 - `npm run test:watch` - Run tests in watch mode
 - `npm run test:coverage` - Run tests with coverage
-
-### Project Structure
-
-```
-backend/
-├── server.js                 # Main server file
-├── package.json              # Dependencies and scripts
-├── .env.example             # Environment variables template
-├── src/
-│   ├── config/
-│   │   └── database.js      # MongoDB connection
-│   ├── controllers/
-│   │   └── authController.js # Authentication logic
-│   ├── middleware/
-│   │   ├── auth.js          # JWT authentication middleware
-│   │   └── validation.js    # Request validation middleware
-│   ├── models/
-│   │   └── User.js          # User Mongoose model
-│   ├── routes/
-│   │   └── auth.js          # Authentication routes
-│   └── utils/
-│       └── jwt.js           # JWT utility functions
-└── tests/
-    └── auth.test.js         # Authentication tests
-```
 
 ## Testing
 
@@ -288,7 +532,38 @@ npm run test:watch
 npm run test:coverage
 ```
 
-## Security Features
+## **Technologies Used**
+
+### **Backend Technologies**
+
+- **Node.js** - JavaScript runtime environment
+- **Express.js** - Web application framework
+- **MongoDB** - NoSQL database
+- **Mongoose** - MongoDB object modeling
+- **JWT** - JSON Web Tokens for authentication
+- **bcrypt** - Password hashing
+- **Helmet.js** - Security headers middleware
+- **express-rate-limit** - Rate limiting middleware
+- **express-validator** - Input validation
+- **cors** - Cross-origin resource sharing
+- **dotenv** - Environment variable management
+
+### **Development Tools**
+
+- **Nodemon** - Development server with auto-restart
+- **Jest** - Testing framework
+- **Supertest** - HTTP assertion library
+- **ESLint** - Code linting
+- **Postman** - API testing and documentation
+
+### **Deployment & Infrastructure**
+
+- **Render** - Cloud hosting platform
+- **MongoDB Atlas** - Cloud database service
+- **GitHub** - Version control and CI/CD
+- **YAML** - Infrastructure as Code configuration
+
+## 🔒 **Security Features**
 
 - **JWT Access Tokens**: Short-lived (15 minutes) for API access
 - **Refresh Tokens**: Long-lived (7 days) stored in database
@@ -380,6 +655,53 @@ All endpoints return consistent error responses:
 }
 ```
 
-## License
+## **Deployment**
 
-This project is licensed under the MIT License.
+### **Deployment Configuration**
+
+The project includes comprehensive deployment configuration:
+
+- **`render.yaml`** - Infrastructure as Code for Render
+- **`env.production.example`** - Production environment template
+- **`RENDER-DEPLOYMENT-GUIDE.md`** - Step-by-step deployment guide
+- **`PRODUCTION-README.md`** - Production-specific documentation
+
+### **Environment Variables (Production)**
+
+```env
+NODE_ENV=production
+PORT=10000
+MONGO_URI=your-mongodb-atlas-connection-string
+JWT_SECRET=your-jwt-secret-key
+JWT_ACCESS_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_IN=7d
+BCRYPT_ROUNDS=12
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+CORS_ORIGIN=https://admin-dashboard-ea64.onrender.com
+```
+
+## **Performance & Monitoring**
+
+### **Key Metrics**
+
+- **Response Time**: < 500ms average
+- **Uptime**: 99.9% target
+- **Error Rate**: < 0.1%
+- **Rate Limiting**: 100 requests per 15 minutes per IP
+
+### **Monitoring Tools**
+
+- Render Dashboard for logs and metrics
+- MongoDB Atlas for database performance
+- Health endpoint for API status
+
+## 📄 **License**
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👨‍💻 **Author**
+
+**Azeez Damilare Gbenga**
+
+- GitHub: [dazeez1](https://github.com/dazeez1)
