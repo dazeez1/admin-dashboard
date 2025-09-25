@@ -107,6 +107,10 @@ const server = app.listen(PORT, () => {
   );
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔐 Auth endpoints: http://localhost:${PORT}/api/auth`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
+  console.log(
+    `🔗 CORS Origin: ${process.env.CORS_ORIGIN || "http://localhost:3000"}`
+  );
 });
 
 // Graceful shutdown
