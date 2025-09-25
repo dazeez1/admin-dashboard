@@ -14,7 +14,7 @@ build/
 dist/
 
 env.production.example
-Admin-Dashboard-RBAC.postman_collection.json
+Admin-Dashboard-RBAC-Simple.postman_collection.json
 RBAC-Test-Results.md
 RENDER-DEPLOYMENT-GUIDE.md
 PRODUCTION-README.md

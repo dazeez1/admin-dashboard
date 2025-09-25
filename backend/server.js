@@ -15,6 +15,9 @@ const adminRoutes = require("./src/routes/admin");
 // Initialize Express app
 const app = express();
 
+// Trust proxy for Render deployment
+app.set("trust proxy", 1);
+
 // Connect to MongoDB
 connectDB();
 
